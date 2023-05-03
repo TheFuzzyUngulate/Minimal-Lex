@@ -1,0 +1,184 @@
+S
+
+func parse():
+	# prime the table
+
+
+def semcheck(self):
+        # get items and rules
+        
+        # print(self.get_symbols_by_features(['vowel']))
+        # print(self.convert_symbol_by_feature(['mid', 'front'], 'a'))
+        for i in self.rules:
+            # label
+            if isinstance(i, str):
+                pass
+            
+            # rule
+            else:
+                org, fin, pcon, ncon = i
+                # regex strings for init
+                
+                ind1 = -1 if pcon == [] else pcon.index('_')
+                ind2 = -1 if ncon == [] else ncon.index('_')
+                
+                pcon = [''.join(self.get_symbols_by_features(i)) if isinstance(i, list) else i for i in pcon]
+                ncon = [''.join(self.get_symbols_by_features(i)) if isinstance(i, list) else i for i in ncon]
+                
+                pn_comb = None
+                if ind2 == -1:
+                    ncon = ['' for i in range(len(pcon))]
+                elif ind1 == -1:
+                    pcon = ['' for i in range(len(ncon))]
+                else:
+                    emplist = ['' for i in range(abs(ind1 - ind2))]
+                    if ind1 > ind2: 
+                        pcon += emplist
+                        ncon = emplist + ncon
+                        pass
+                    elif ind2 > ind1:
+                        ncon += emplist
+                        pcon = emplist + pcon
+                pn_comb = ['.' if i == '^$' else i for i in [pcon[i] if (ncon[i] == '' or pcon[i] == '_' or pcon[i] == '$') else '^' + ncon[i] if pcon[i] == '' else (pcon[i], '^' + ncon[i]) for i in range(len(pcon))]]
+                print(pn_comb)
+                
+                regex_strt = ''
+                for k in org:
+                    if isinstance(k, list):
+                        lst = ''.join(self.get_symbols_by_features(k))
+                        regex_strt += f'([{lst}])'
+                    else:
+                        if k == '*':
+                            regex_strt += f'()'
+                        elif k == '$':
+                            if org.index(k) == 0:
+                                regex_strt += '^'
+                            else:
+                                regex_strt += '$'
+                        else:
+                            regex_strt += f'({k})'
+                            
+                regex_final = ''
+                for k in pn_comb:
+                    if isinstance(k, tuple):
+                        regex_final += f'[{k[0]}&&[{k[1]}]]'
+                    else:
+                        if k == '_':
+                            regex_final += regex_strt
+                        else: regex_final += k
+                            
+                print(f'{regex_final}')
+                
+                for k in self.words:
+                    replstr = k
+                    pattern = re.compile(regex_final)
+                    for m in pattern.finditer(k):
+                        print(m.groups())
+                        for g in range(len(m.groups())):
+                            if isinstance(fin[g], list):
+                                q = self.convert_symbol_by_feature(fin[g], m.group(g+1))
+                                re.sub(regex_final, f'{q}\\{g+1}', replstr)
+                            else:
+                                if fin[g] == '*':
+                                    re.sub(regex_final, f'\\{g+1}', replstr)
+                                else:
+                                    re.sub(regex_final, f'{fin[g]}\\{g+1}', replstr)
+                            print(m.group(g+1))
+                    print(replstr)
+                        
+                    # print(pattern.groups())
+                    # for i in pattern.groups():
+                        # pass
+                    
+                    
+                    """if isinstance(fin[finind], list):
+                            s = self.convert_symbol_by_feature(fin[finind], m.group())
+                        else:
+                            if fin[finind] == '*':
+                                pass
+                            else: s = fin[finind]
+                        res = k[:m.start()] + s + k[m.end():]
+                        print(f'{m.start()}, {m.group()}')
+                        print(f'res: {res}')""" 
+                        
+                
+                
+                """ regex_org = ''
+                regex_pcon = ''
+                regex_ncon = ''
+                for l in [org, pcon, ncon]: 
+                    reg_ini = ''
+                    for k in l:
+                        # for feature lists
+                        if isinstance(k, list):
+                            lst = ''.join(self.get_symbols_by_features(k))
+                            reg_ini += f'([{lst}])'
+                        else:
+                            if k == '_':
+                                reg_ini += regex_org
+                            elif k == '*':
+                                reg_ini += f'()'
+                            elif k == '$':
+                                if l.index(k) == 0:
+                                    reg_ini += '^'
+                                elif l.index(k) == len(l)-1:
+                                    reg_ini += '$'
+                                else: raise Exception("dollar sign must appear either at the beginning or the end")
+                            else: reg_ini += f'({k})'
+                    
+                    if l == org: 
+                        regex_org = reg_ini
+                    elif l == pcon: 
+                        regex_pcon = reg_ini
+                    else: 
+                        regex_ncon = reg_ini
+                        
+                if pcon == []:
+                    regex_pcon = regex_org """
+                           
+                """ for k in self.words:
+                    pattern = re.compile(regex_pcon)
+                    # wordsplit = re.split(regex_pcon, k)
+                    negpattern = re.compile(regex_ncon)
+                    
+                    res = k
+                    finind = 0
+                    res_off = 0
+                    
+                    # print(wordsplit)
+                    
+                    endstr = ''
+                    for m in range(len(fin)):
+                        if fin[m] != '*':
+                            endstr += f'{fin[m]} \\{m} '
+                    pattern.sub(endstr, k)
+                    
+                    for m in pattern.finditer(k):
+                        if m not in negpattern.finditer(k):
+                            s = ''
+                            if isinstance(fin[finind], list):
+                                s = self.convert_symbol_by_feature(fin[finind], m.group())
+                            else:
+                                if fin[finind] == '*':
+                                    pass
+                                else: s = fin[finind]
+                            res = res[:m.start()] + s + res[m.end():]
+                            print(f'{m.start()}, {m.group()}')
+                            print(f'res: {res}')
+                    
+                    for i in range(len(wordsplit)):
+                        if matchind < len(matchlist) and wordsplit[i] == matchlist[matchind]:
+                            if isinstance(fin[finind], list):
+                                m = self.convert_symbol_by_feature(fin[finind], wordsplit[i])
+                                res += m
+                            else:
+                                if fin[finind] == '*':
+                                    pass 
+                                else: res += fin[finind]
+                            
+                            if finind >= len(fin) - 1: finind = 0
+                            else: finind += 1
+                            matchind += 1
+                        else: res += wordsplit[i]
+                    self.write_line(res)
+        self.close_output() """

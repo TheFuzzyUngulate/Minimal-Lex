@@ -1,0 +1,27 @@
+# A comment
+FEATURE type(cons, vowel)
+FEATURE place(labial, alveolar, dorsal)
+FEATURE manner(nasal, plosive, fricative, approximant)
+FEATURE height(high, mid, low)
+FEATURE frontness(front, center, back)
+
+# Symbols
+SYMBOL p [cons labial plosive]
+SYMBOL t [cons alveolar plosive]
+SYMBOL k [cons dorsal plosive]
+SYMBOL m [cons labial nasal]
+SYMBOL n [cons alveolar nasal]
+SYMBOL s [cons alveolar fricative]
+SYMBOL x [cons dorsal fricative]
+SYMBOL f [cons labial fricative]
+SYMBOL w [cons dorsal approximant]
+SYMBOL j [cons alveolar approximant]
+SYMBOL a [vowel low center]
+SYMBOL e [vowel mid front]
+SYMBOL i [vowel high front]
+SYMBOL o [vowel mid back]
+SYMBOL u [vowel high back]
+
+# Vowel final loss
+change-1:
+    [plosive] => [fricative] / [vowel] _ [vowel]

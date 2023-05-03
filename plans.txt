@@ -1,0 +1,174 @@
+small stuff:
+
+Feature
+Rules
+Labels (cannot be added before rules, by the way)
+
+comments are terminated by "#"
+
++---------+
+| SCANNER |
++---------+
+
+tokens:	FEATURE		"feature"
+		SYMBOL		"symbol"
+		ID
+        RULEID
+        SYMBID
+		CHAR
+		SEMICOLON	";"
+		COLON		":"
+		UNDERSCORE	"_"
+		ASTERISK	"*"
+		STRIKE		"/"
+		DSTRIKE		"//"	
+		LPARENT		"("
+		RPARENT		")"
+		LBRACKET	"["
+		RBRACKET	"]"
+		COMMA		","
+		BECOMES		"=>"
+		EOF
+		DOLLAR		"$"
+
++--------------+
+| PARSER (LL1) |
++--------------+
+
+S => FeatureList SymbolList Rulelist
+FeatureList => Feature FeatureList | empty
+SymbolList => Symbol SymbolList | empty
+RuleList => Rule RuleList | empty
+Feature => "feature" ID CommaIdList ";"
+Symbol => "symbol" ID IdList ";"
+CommaIdList => "(" CommaIdList1 ")"
+CommaIdList1 => ID CommaIdList2
+CommaIdList2 => "," ID CommaIdList2 | empty
+IdList => "[" IdList1 "]"
+IdList1 => ID IdList1 | empty
+Rule => Expr "=>" Expr Environ NegEnviron ";" | Label ";"
+Expr => Arg Expr1
+Expr1 => Arg Expr1 | empty
+Arg => ID | "_" | "*" | "$" | IdList
+Label => ID ":"
+Environ => "/" Expr | empty
+NegEnviron => "//" Expr | empty
+
+S => FeatureList SymbolList Rulelist
+FeatureList => Feature FeatureList
+FeatureList => empty
+SymbolList => Symbol SymbolList
+SymbolList => empty
+RuleList => Rule RuleList
+RuleList => empty
+Feature => "feature" ID CommaIdList ";"
+Symbol => "symbol" ID IdList ";"
+CommaIdList => "(" CommaIdList1 ")"
+CommaIdList1 => ID CommaIdList2
+CommaIdList2 => "," ID CommaIdList2
+CommaIdList2 => empty
+IdList => "[" IdList1 "]"
+IdList1 => ID IdList1
+IdList1 => empty
+Rule => Arg Rule1
+Rule1 => Expr "=>" Expr Environ NegEnviron ";"
+Rule1 => "=>" Expr Environ NegEnviron ";"
+Rule1 => ":" ";"
+Expr => Arg Expr1
+Expr1 => Arg Expr1
+Expr1 => empty
+Arg => ID
+Arg => "_"
+Arg => "*"
+Arg => IdList
+Arg => "$"
+Environ => "/" Expr
+Environ => empty
+NegEnviron => "//" Expr
+NegEnviron => empty
+
+x 					first(x)							follow(x)
+
+S					first(featurelist)					$
+
+featurelist			first(feature),						first(symbollist)
+					follow(featurelist)			
+
+symbollist			first(symbol),						first(rulelist)
+					follow(symbollist)
+
+rulelist			first(rule), follow(rulelist)		follow(S) => $
+
+feature				"feature"							first(featurelist)
+
+symbol				"symbol"							first(symbollist)
+
+commaidlist 		"("									";"
+
+commaidlist1		ID 									")"
+
+commaidlist2		",", follow(commaidlist1)			follow(commaidlist1)
+
+idlist				"["									follow(arg), ";"
+
+idlist1 			ID, follow(idlist1)					"]"
+
+rule				first(arg)							first(rulelist)
+
+rule1 				first(expr), "=>", ":"				follow(rule)
+
+expr				first(arg)							"=>", first(environ)
+
+expr1 				first(arg), follow(expr1)			follow(expr)
+
+arg					ID, "_", "*", "$", first(idlist)	first(expr1)
+
+environ				"/", follow(environ)				first(negenviron)
+
+negenviron			"//", follow(negenviron)			";"
+
+===============================================================================
+
+x 					first(x)							follow(x)
+
+S					"feature"							$
+					"symbol", ID, "_", "*", "[", $, "$"
+
+featurelist			"feature",							"symbol", ID, "_", "*", "[", "$", $
+					"symbol", ID, "_", "*", "[", $		
+
+symbollist			"symbol",							ID, "_", "*", "[", $, "$"
+					ID, "_", "*", "[", $, "$"
+
+rulelist			ID, "_", "*", "[", "$", $			$
+
+feature				"feature"							"feature", "symbol", ID, "_", "*", "[", "$", $
+
+symbol				"symbol"							"symbol", ID, "_", "*", "[", "$", $
+
+commaidlist 		"("									";"
+
+commaidlist1		ID 									")"
+
+commaidlist2		",", ")"							")"
+
+idlist				"["									ID, "_", "*", "[", "$", "=>", "/", ";"
+
+idlist1 			ID, "]"								"]"
+
+rule				ID, "_", "*", "[", "$"				ID, "_", "*", "[", "$", $
+
+rule1				ID, "_", "*", "[", "$"				ID, "_", "*", "[", "$", $
+					"=>",
+					":"
+
+expr				ID, "_", "*", "[", "$"				"=>", "/", "//", ";"
+
+expr1 				ID, "_", "*", "[", "$"				"=>", "/", "//", ";"
+					"=>", "/", "//", ";"
+
+arg					ID, "_", "*", "[", "$"				ID, "_", "*", "[", "$", "=>", "/"
+
+environ				"/", "//", ";"						"//", ";"
+
+negenviron			"//", ";"							";"

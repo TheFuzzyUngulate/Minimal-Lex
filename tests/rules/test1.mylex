@@ -1,0 +1,16 @@
+# A comment
+Feature type(tx, ty)
+Feature class(ca, cb, cc)
+
+Symbol q [tx ca]
+Symbol v [tx cb]
+Symbol r [tx cc]
+Symbol s [ty ca]
+Symbol p [ty cc]
+Symbol u [ty cb] # Another comment
+
+change-1:
+    [tx] => [ty] / _ $ // $ _
+
+change-2:
+    [ty] => [tx] / [ty] _ [ty]

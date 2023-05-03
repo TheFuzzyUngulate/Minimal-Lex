@@ -1,0 +1,4 @@
+Feature type(cons, vowel)
+Feature loc(labial, alveolar, dorsal)
+
+Symbol a [labial alveolar dorsal]
